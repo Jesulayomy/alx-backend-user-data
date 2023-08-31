@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 """ A Module contauining an obfuscated log message """
 import logging
+import mysql.connector
 import os
 import re
-from mysql.connector import connection
 from typing import List
 
 
 PII_FIELDS = ('name', 'email', 'phone', 'ssn', 'password')
 
 
-def filter_datum(fields: List[str],
-                 redaction: str,
-                 message: str,
-                 separator: str) -> str:
+def filter_datum(fields: List[str], redaction: str,
+                 message: str, separator: str) -> str:
     """ returns the log message obfuscated """
     for field in fields:
         message = re.sub(f'{field}=.*?{separator}',
@@ -44,21 +42,23 @@ class RedactingFormatter(logging.Formatter):
 def get_logger() -> logging.Logger:
     """ Returns a logger object from the logging module """
     logger = logging.getLogger("user_data")
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(RedactingFormatter(PII_FIELDS))
     logger.setLevel(logging.INFO)
-    handler = logging.StreamHandler()
     logger.propagate = False
-    handler.setFormatter(RedactingFormatter(PII_FIELDS))
-    logger.addHandler(handler)
+    logger.addHandler(stream_handler)
     return logger
 
 
-def get_db() -> connection.MySQLConnection:
+def get_db() -> mysql.connector.connection.MySQLConnection:
     """ returns a connection object to a database """
-    return connection.MySQLConnection(
+    conn = mysql.connector.connect(
+        host=os.getenv('PERSONAL_DATA_DB_HOST', 'localhost'),
+        port=3306,
         user=os.getenv('PERSONAL_DATA_DB_USERNAME', 'root'),
         password=os.getenv('PERSONAL_DATA_DB_PASSWORD', ''),
-        host=os.getenv('PERSONAL_DATA_DB_HOST', 'localhost'),
-        database=os.getenv('PERSONAL_DATA_DB_NAME', 'holberton'))
+        database=os.getenv('PERSONAL_DATA_DB_NAME', ''))
+    return conn
 
 
 def main():
