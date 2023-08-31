@@ -36,9 +36,9 @@ class RedactingFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         return filter_datum(self.fields,
-                            RedactingFormatter.REDACTION,
+                            self.REDACTION,
                             super(RedactingFormatter, self).format(record),
-                            RedactingFormatter.SEPARATOR)
+                            self.SEPARATOR)
 
 
 def get_logger() -> logging.Logger:
@@ -46,6 +46,7 @@ def get_logger() -> logging.Logger:
     logger = logging.getLogger("user_data")
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler()
+    logger.propagate = False
     handler.setFormatter(RedactingFormatter(PII_FIELDS))
     logger.addHandler(handler)
     return logger
@@ -60,7 +61,7 @@ def get_db() -> connection.MySQLConnection:
         database=os.getenv('PERSONAL_DATA_DB_NAME', 'holberton'))
 
 
-def main() -> None:
+def main():
     """ Main function to run the nodule if not imported """
     logger = get_logger()
     db = get_db()
