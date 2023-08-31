@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """ A Module contauining an obfuscated log message """
-from mysql.connector import connection
-from typing import List
 import logging
 import os
 import re
+from mysql.connector import connection
+from typing import List
+
+
+PII_FIELDS = ('name', 'email', 'phone', 'ssn', 'password')
 
 
 def filter_datum(fields: List[str],
@@ -19,8 +22,9 @@ def filter_datum(fields: List[str],
 
 
 class RedactingFormatter(logging.Formatter):
-    """ Redacting Formatter class
-        """
+    """
+        Redacting Formatter class
+    """
 
     REDACTION = "***"
     FORMAT = "[HOLBERTON] %(name)s %(levelname)s %(asctime)-15s: %(message)s"
@@ -37,9 +41,6 @@ class RedactingFormatter(logging.Formatter):
                             RedactingFormatter.SEPARATOR)
 
 
-PII_FIELDS = ('name', 'email', 'phone', 'ssn', 'password')
-
-
 def get_logger() -> logging.Logger:
     """ Returns a logger object from the logging module """
     logger = logging.getLogger("user_data")
@@ -47,7 +48,6 @@ def get_logger() -> logging.Logger:
     handler = logging.StreamHandler()
     handler.setFormatter(RedactingFormatter(PII_FIELDS))
     logger.addHandler(handler)
-
     return logger
 
 
