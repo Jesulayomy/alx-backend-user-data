@@ -22,7 +22,11 @@ else:
 
 
 @app.before_request
-def preauth():
+def preauth() -> None:
+    """
+        This runs before each request and determines
+        if the request needs authentication
+    """
     if not auth:
         return
     noauth = [
@@ -52,7 +56,7 @@ def noaccess(error) -> str:
 
 @app.errorhandler(404)
 def not_found(error) -> str:
-    """ Not found handler
+    """ Not found handler for the app routes
     """
     return jsonify({"error": "Not found"}), 404
 
