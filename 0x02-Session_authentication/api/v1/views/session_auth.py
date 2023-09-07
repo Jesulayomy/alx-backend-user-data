@@ -14,14 +14,17 @@ from os import getenv
 def auth_login() -> str:
     """ provides the login feaure for the authenticated sessions """
     email = request.form.get('email')
-    password = request.form.get('password')
     if email is None or email == '':
         return jsonify({'error': 'email missing'}), 400
+    password = request.form.get('password')
     if password is None or password == '':
         return jsonify({'error': 'password missing'}), 400
     try:
         users = User.search({'email': email})
     except Exception:
+        return jsonify({'error': 'no user found for this email'}), 404
+
+    if users is None:
         return jsonify({'error': 'no user found for this email'}), 404
 
     for user in users:
