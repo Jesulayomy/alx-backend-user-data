@@ -22,14 +22,11 @@ def auth_login() -> str:
     try:
         users = User.search({'email': email})
     except Exception:
-        return jsonify(
-            {'error': 'no user found for this email'}), 404
-    # if users is None or users == []:
-    #     return jsonify(
-    # {'error': 'no user found for this email'}), 404)
+        return jsonify({'error': 'no user found for this email'}), 404
+
     for user in users:
-        from api.v1.app import auth
         if user.is_valid_password(password):
+            from api.v1.app import auth
             session_id = auth.create_session(user.id)
             session_name = getenv('SESSION_NAME')
             response = jsonify(user.to_json())
@@ -37,6 +34,7 @@ def auth_login() -> str:
             return response
 
     return jsonify({'error': 'wrong password'}), 401
+
 
 @app_views.route(
         '/auth_session/logout',

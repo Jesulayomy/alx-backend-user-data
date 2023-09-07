@@ -8,9 +8,9 @@ from os import getenv
 class SessionExpAuth(SessionAuth):
     """ Session authentication class for the users api with timeout """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """ Overload function and constructor """
-        session_duration = int(getenv('SESSION_DURATION', 0))
+        self.session_duration = int(getenv('SESSION_DURATION', 0))
 
     def create_session(self, user_id: str = None) -> str:
         """ creates a session for the user ID """
