@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 """ Module for the session authentication class """
-from flask import session
-from typing import TypeVar
 from uuid import uuid4
 from api.v1.auth.auth import Auth
 from models.user import User
@@ -15,13 +13,15 @@ class SessionAuth(Auth):
         """ creates a session for the user ID """
         if type(user_id) is not str:
             return None
-        session_id = uuid4()
+        session_id = str(uuid4())
         self.user_id_by_session_id[session_id] = user_id
         return session_id
 
     def user_id_for_session_id(self, session_id: str = None) -> str:
         """ Returns the user id for the session id given """
 
+        if type(session_id) is not str:
+            return None
         return self.user_id_by_session_id.get(session_id)
 
     def current_user(self, request=None):
@@ -33,7 +33,7 @@ class SessionAuth(Auth):
     def destroy_session(self, request=None):
         """ deletwes the user session and logs out """
         if request is None:
-            return None
+            return False
         cookies = self.session_cookie(request)
         if cookies is None or cookies == '':
             return False
