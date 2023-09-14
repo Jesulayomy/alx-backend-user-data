@@ -50,20 +50,21 @@ class DB:
 
     def find_user_by(self, **kwargs: Mapping) -> User:
         """ Takes the keyword arguments and returns the first matching row """
+        keys = []
+        values = []
+        for k, v in kwargs.items():
+            if not hasattr(User, k):
+                raise InvalidRequestError()
+            else:
+                keys.append(getattr(User, k))
+                values.append(v)
 
-        query = self._session.query(User)
-        if query is None:
-            raise NoResultFound
-        if kwargs is None:
-            raise InvalidRequestError
-        for key, value in kwargs.items():
-            if not hasattr(User, key):
-                raise InvalidRequestError
+        res = self._session.query(User).filter(
+                tuple_(*keys)).in_([tuple(values)]).first()
+        if res is none:
+            raise NoResultFound()
+        return res
 
-        result = self._session.query(User).filter_by(kwargs).first()
-        if result is None:
-            raise NoResultFound
-        return result
 
     def update_user(self, user_id: int, **kwargs: Mapping) -> None:
         """ Updates a user based on its integer ID """
