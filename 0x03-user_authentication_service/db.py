@@ -3,10 +3,10 @@
 """
 from sqlalchemy import create_engine, tuple_
 from sqlalchemy.exc import InvalidRequestError
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm.session import Session
+from typing import Mapping
 
 from user import (
     Base,
@@ -21,7 +21,7 @@ class DB:
     def __init__(self) -> None:
         """ Initialize a new DB instance
         """
-        self._engine = create_engine("sqlite:///a.db", echo=False)
+        self._engine = create_engine("sqlite:///a.db", echo=True)
         Base.metadata.drop_all(self._engine)
         Base.metadata.create_all(self._engine)
         self.__session = None
@@ -50,37 +50,33 @@ class DB:
             user = None
         return user
 
-    def find_user_by(self, **kwargs) -> User:
+    def find_user_by(self, **kwargs: Mapping) -> User:
         """ Takes the keyword arguments and returns the first matching row """
-        keys = []
-        values = []
-        for k, v in kwargs.items():
-            if not hasattr(User, k):
+        fields, values = [], []
+        for key, value in kwargs.items():
+            if hasattr(User, key):
+                fields.append(getattr(User, key))
+                values.append(value)
+            else:
                 raise InvalidRequestError()
-            else:
-                keys.append(getattr(User, k))
-                values.append(v)
-
-        res = self._session.query(User).filter(
-                tuple_(*keys)).in_([tuple(values)]).first()
-        if res is none:
+        result = self._session.query(User).filter(
+            tuple_(*fields).in_([tuple(values)])
+        ).first()
+        if result is None:
             raise NoResultFound()
-        return res
+        return result
 
-    def update_user(self, user_id: int, **kwargs) -> None:
+    def update_user(self, user_id: int, **kwargs: Mapping) -> None:
         """ Updates a user based on its integer ID """
-
         user = self.find_user_by(id=user_id)
-        if user is None:
-            return
-        updates = {}
-        for k, v in kwargs.items():
-            if hasattr(User, k):
-                updates[getattr(User, k)] = v
-            else:
-                raise ValueError()
-        self._session.query(User).filter(User.id == user_id).update(
-            updates,
-            synchronize_session=False,
-        )
+        if user:
+            valid_attrs = [
+                    'id', 'email',
+                    'hashed_password',
+                    'session_id', 'reset_token']
+            for key, val in kwargs.items():
+                if key not in valid_attrs:
+                    raise ValueError
+                setattr(user, key, val)
+        self._session.add(user)
         self._session.commit()
