@@ -40,9 +40,9 @@ class DB:
             Saves a user to the database using his email and hashed pass
         """
         try:
-            user = User(
-                    email=email,
-                    hashed_password=hashed_password)
+            user = User()
+            user.email = email
+            user.hashed_password = hashed_password
             self._session.add(user)
             self._session.commit()
         except Exception:
@@ -52,18 +52,19 @@ class DB:
 
     def find_user_by(self, **kwargs: Mapping) -> User:
         """ Takes the keyword arguments and returns the first matching row """
-        fields, values = [], []
+
+        query = self._session.query(User)
+        if query is None:
+            raise NoResultFound
+        if kwargs is None:
+            raise InvalidRequestError
         for key, value in kwargs.items():
-            if hasattr(User, key):
-                fields.append(getattr(User, key))
-                values.append(value)
-            else:
-                raise InvalidRequestError()
-        result = self._session.query(User).filter(
-            tuple_(*fields).in_([tuple(values)])
-        ).first()
+            if not hasattr(User, key):
+                raise InvalidRequestError
+
+        result = self._session.query(User).filter_by(kwargs).first()
         if result is None:
-            raise NoResultFound()
+            raise NoResultFound
         return result
 
     def update_user(self, user_id: int, **kwargs: Mapping) -> None:
