@@ -50,13 +50,13 @@ class DB:
 
     def find_user_by(self, **kwargs: Mapping) -> User:
         """ Takes the keyword arguments and returns the first matching row """
+        users = self._session.query(User)
+        if not users:
+            raise NoResultFound
         if not kwargs:
             raise InvalidRequestError
-        valid_attrs = ['id', 'email',
-                       'hashed_password',
-                       'session_id', 'reset_token']
         for key in kwargs.keys():
-            if key not in valid_attrs:
+            if not hasattr(User, key):
                 raise InvalidRequestError
         user = self._session.query(User).filter_by(**kwargs).first()
         if not user:
